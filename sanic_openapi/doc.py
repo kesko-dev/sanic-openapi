@@ -21,6 +21,9 @@ class Field:
             output['enum'] = self.choices
         return output
 
+    def cast(self, field):
+        pass
+
 
 class Integer(Field):
     def serialize(self):
@@ -29,6 +32,9 @@ class Integer(Field):
             "format": "int64",
             **super().serialize()
         }
+
+    def cast(self, field):
+        return int(field)
 
 
 class Float(Field):
@@ -39,6 +45,9 @@ class Float(Field):
             **super().serialize()
         }
 
+    def cast(self, field):
+        return float(field)
+
 
 class String(Field):
     def serialize(self):
@@ -47,6 +56,9 @@ class String(Field):
             **super().serialize()
         }
 
+    def cast(self, field):
+        return str(field)
+
 
 class Boolean(Field):
     def serialize(self):
@@ -54,6 +66,9 @@ class Boolean(Field):
             "type": "boolean",
             **super().serialize()
         }
+
+    def cast(self, field):
+        return bool(field)
 
 
 class Tuple(Field):
@@ -90,6 +105,9 @@ class Dictionary(Field):
             **super().serialize()
         }
 
+    def cast(self, field):
+        return {key: schema.cast(field[key]) for key, schema in self.fields.items()}
+
 
 class List(Field):
     def __init__(self, items=None, *args, **kwargs):
@@ -109,6 +127,10 @@ class List(Field):
             "type": "array",
             "items": items
         }
+
+    def cast(self, field):
+        item_schema = self.items[0]
+        return [item_schema.cast(item) for item in field]
 
 
 definitions = {}
