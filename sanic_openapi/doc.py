@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime
+from typing import List
 
 
 class Field:
@@ -72,7 +73,19 @@ class Boolean(Field):
 
 
 class Tuple(Field):
-    pass
+    def __init__(self, items, **kwargs):
+        self.items = items
+        super().__init__(**kwargs)
+
+    def serialize(self):
+        items = [schema().serialize() for schema in self.items]
+        return {
+            "type": "tuple",
+            "items": items
+        }
+
+    def cast(self, field):
+        return tuple((schema().cast(item) for item, schema in zip(field, self.items)))
 
 
 class Date(Field):
