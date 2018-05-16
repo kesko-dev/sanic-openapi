@@ -217,6 +217,10 @@ def serialize_schema(schema):
             return Dictionary(schema).serialize()
         elif schema_type is list:
             return List(schema).serialize()
+        elif issubclass(schema_type, RouteField):
+            if not isinstance(schema.field, dict) and 'validate' in schema.field.__dict__:
+                del schema.field.validate
+            return serialize_schema(schema.field)
 
     return {}
 
