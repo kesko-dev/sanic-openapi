@@ -1,11 +1,13 @@
 import re
 from itertools import repeat
+from typing import List
+from collections import defaultdict
 
 from sanic.blueprints import Blueprint
 from sanic.response import json
 from sanic.views import CompositionView
 
-from .doc import route_specs, RouteSpec, serialize_schema, definitions
+from .doc import route_specs, RouteSpec, serialize_schema, definitions, Object
 
 
 blueprint = Blueprint('openapi', url_prefix='openapi')
@@ -20,6 +22,20 @@ def remove_nulls(dictionary, deep=True):
         for k, v in dictionary.items()
         if v is not None
     }
+
+
+def _merge_dicts(list_of_dicts: List[dict], *, on: List[str]) -> List[dict]:
+    desired_keys = set(on)
+    common_keys = set().union(*[desired_keys.intersection(dictionary.keys()) for dictionary in list_of_dicts])
+
+    def _get_sig(dict_obj: dict) -> str:
+        return '.'.join([str(dict_obj[k]) for k in common_keys])
+
+    aggregation = defaultdict(dict)
+    for dictionary in list_of_dicts:
+        aggregation[_get_sig(dictionary)].update(dictionary)
+
+    return list(aggregation.values())
 
 
 @blueprint.listener('before_server_start')
@@ -117,6 +133,8 @@ def build_spec(app, loop):
 
                 route_parameters.append(route_param)
 
+            merged_route_parameters = _merge_dicts(route_parameters, on=['type', 'required', 'name', 'in'])
+
             endpoint = remove_nulls({
                 'operationId': route_spec.operation or route.name,
                 'summary': route_spec.summary,
@@ -124,7 +142,7 @@ def build_spec(app, loop):
                 'consumes': consumes_content_types,
                 'produces': produces_content_types,
                 'tags': route_spec.tags or None,
-                'parameters': route_parameters,
+                'parameters': merged_route_parameters,
                 'responses': {
                     "200": {
                         "description": None,

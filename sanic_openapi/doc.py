@@ -166,7 +166,7 @@ class Object(Field):
             "properties": {
                 key: serialize_schema(schema)
                 for key, schema in self.cls.__dict__.items()
-                if not key.startswith("_")
+                if not key.startswith("_") and key != 'validate'
                 },
             **super().serialize()
         }
@@ -175,7 +175,8 @@ class Object(Field):
         return {
             "type": "object",
             "$ref": "#/definitions/{}".format(self.object_name),
-            **super().serialize()
+            **super().serialize(),
+            **self.definition
         }
 
 
@@ -218,8 +219,6 @@ def serialize_schema(schema):
         elif schema_type is list:
             return List(schema).serialize()
         elif issubclass(schema_type, RouteField):
-            if not isinstance(schema.field, dict) and 'validate' in schema.field.__dict__:
-                del schema.field.validate
             return serialize_schema(schema.field)
 
     return {}
