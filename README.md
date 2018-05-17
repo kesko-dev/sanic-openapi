@@ -1,3 +1,9 @@
+# This repository was forked into our own organization so that we can fix certain issues upstream:
+- Request parameters' descriptions not showing
+- Response body documentation missing
+# Also the following enhancement:
+- type checks
+
 # Sanic OpenAPI
 
 [![Build Status](https://travis-ci.org/channelcat/sanic-openapi.svg?branch=master)](https://travis-ci.org/channelcat/sanic-openapi)
